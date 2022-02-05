@@ -4,10 +4,12 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Pembelian;
+use App\PembelianDetail;
 use App\Product;
 use App\Supplier;
 use App\User;
 use Illuminate\Http\Request;
+use \Yajra\Datatables\Datatables;
 
 class PembelianDetailController extends Controller
 {
@@ -40,6 +42,47 @@ class PembelianDetailController extends Controller
         ]);
     }
 
+    public function data($id)
+    {
+        $detail = PembelianDetail::with('product')
+            ->where('id_pembelian', $id)
+            ->get();
+        $data = array();
+        $total = 0;
+        $total_item = 0;
+
+        foreach($detail as $item) {
+            $row = array();
+            $row['codeProduk'] = $item->code;
+            $row['namaProduk'] = $item->product['name_product'];
+            $row['jumlah'] = '<input type="number" class="form-control input-sm quantity" data-id="'. $item->id_pembelian_detail .'" value="'. $item->jumlah .'">';
+            $row['harga_beli'] = 'Rp'.number_format($item->harga_beli);
+            $row['subtotal'] = 'Rp'.number_format($item->subtotal);
+            $row['aksi'] = '<button onclick="deleteData(`'. route('pembelian_detail.destroy', $item->id_pembelian_detail) .'`)" class="btn btn-xs btn-danger"><i class="fa fa-trash"></i></button>';
+
+            $data[] = $row;
+            $total += $item->harga_beli * $item->jumlah;
+            $total_item += $item->jumlah;
+
+        }
+        $data[] = [
+            'codeProduk' => '
+                <div class="total d-none">'. $total .'</div>
+                <div class="total_item d-none">'. $total_item .'</div>',
+            'namaProduk' => '',
+            'jumlah'     => '',
+            'harga_beli'  => '',
+            'subtotal'    => '',
+            'aksi'        => '',
+        ];
+
+        return datatables()
+            ->of($data)
+            ->addIndexColumn()
+            ->rawColumns(['aksi', 'codeProduk','jumlah'])
+            ->make(true);
+    }
+
     /**
      * Show the form for creating a new resource.
      *
@@ -58,7 +101,18 @@ class PembelianDetailController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $produk = Product::where('id_produk', $request->id_produk)->first();
+        if (! $produk) {
+            return response()->json('Data gagal disimpan', 400);
+        }
+
+        $data = $request->all();
+        $data['subtotal'] = $produk->harga_beli * $request->jumlah;
+
+        PembelianDetail::create($data);
+
+        return redirect()->route('pembelian_detail.index');
+
     }
 
     /**
@@ -69,7 +123,9 @@ class PembelianDetailController extends Controller
      */
     public function show($id)
     {
-        //
+        $pembelianDetail = PembelianDetail::find($id);
+
+        return response()->json($pembelianDetail);
     }
 
     /**
@@ -78,9 +134,14 @@ class PembelianDetailController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
-    public function edit($id)
+    public function edit(Request $request, $id)
     {
-        //
+        $data = $request->all();
+        $item = PembelianDetail::findOrFail($id);
+
+        $item->update($data);
+
+         return redirect()->route('pembelian_detail.index');
     }
 
     /**
@@ -92,7 +153,11 @@ class PembelianDetailController extends Controller
      */
     public function update(Request $request, $id)
     {
-        //
+        $data = $request->all();
+        $detail = PembelianDetail::find($id);
+        $detail->jumlah = $request->jumlah;
+        $detail->subtotal = $detail->harga_beli * $request->jumlah;
+        $detail->update($data);
     }
 
     /**
@@ -103,6 +168,21 @@ class PembelianDetailController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $detail = PembelianDetail::find($id);
+        $detail->delete();
+
+        return response(null, 204);
+    }
+
+    public function loadForm($diskon, $total)
+    {
+        $bayar = $total - ($diskon / 100 * $total);
+        $data  = [
+            'totalrp' => number_format($total),
+            'bayar' => $bayar,
+            'bayarrp' => number_format($bayar)
+        ];
+
+        return response()->json($data);
     }
 }

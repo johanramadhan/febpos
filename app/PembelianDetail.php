@@ -13,4 +13,9 @@ class PembelianDetail extends Model
     protected $hidden = [
         
     ];
+
+    public function product()
+    {
+        return $this->hasOne(Product::class, 'id_produk', 'id_produk');
+    }
 }
