@@ -73,22 +73,21 @@
                     <tbody>
                       @forelse ($pembelians as $item)
                         <tr>
-                          <td>{{ $loop->iteration }}</td>
+                          <td class="text-center">{{ $loop->iteration }}</td>
                           <td>{{ $item->code }}</td>
                           <td>{{ date('d-M-Y', strtotime($item->tgl_pembelian)) }}</td>
-                          <td>{{ $item->name_product }}</td>
-                          <td>{{ $item->diskon }}%</td>
-                          <td>{{ number_format($item->stok) }}</td>
-                          <td>{{ $item->satuan }}</td>
-                          <td>{{ $item->berat }}</td>
-                          <td>{{ $item->satuan_berat }}</td>
-                          <td>{{ $item->merk }}</td>
-                          <td>Rp{{ number_format($item->harga_beli) }}</td>
-                          <td>Rp{{ number_format($item->harga_jual) }}</td>
+                          <td>{{ $item->supplier->name }}</td>
+                          <td>{{ $item->user->name }}</td>
+                          <td class="text-center">{{ number_format($item->total_item) }}</td>
+                          <td class="text-center">Rp{{ number_format($item->total_harga) }}</td>
+                          <td class="text-center">{{ $item->diskon }}%</td>
+                          <td>Rp{{ number_format($item->bayar) }}</td>
+                          <td class="text-center">{{ $item->status }}</td>
                           <td>
                             <a href="{{ route('pembelian.edit', $item->id_pembelian) }}" class="btn btn-xs btn-info">
                               <i class="fa fa-pencil-alt"></i>
                             </a>
+                            <button onclick="showDetail( '{{ route('pembelian.detail', $item->id_pembelian) }}')" class="btn btn-xs btn-info btn-flat m-1"><i class="fa fa-eye"></i></button>
                             <form action="{{ route('pembelian.destroy', $item->id_pembelian) }}" method="POST" class="d-inline">
                               @csrf
                               @method('delete')
@@ -115,6 +114,7 @@
   </div>
 
   @include('pages.admin.pembelian.modal')
+  @includeIf('pages.admin.pembelian.detail')
 @endsection
 
 @push('addon-script')
@@ -155,5 +155,34 @@
         "responsive": true,
       });
     });
+  </script>
+
+  <script>
+    let table1;
+
+    $(function () {
+      $('.table-supplier').DataTable();
+      table1 = $('.table-detail').DataTable({
+          processing: true,
+          bSort: false,
+          columns: [
+              {class: 'text-center', data: 'DT_RowIndex', searchable: false, sortable: false},
+              {class: 'text-center', data: 'code'},
+              {class: 'text-center', data: 'tanggal'},
+              {class: 'text-center', data: 'name'},
+              {class: 'text-center', data: 'harga_beli'},
+              {class: 'text-center', data: 'jumlah'},
+              {class: 'text-center', data: 'berat'},
+              {class: 'text-center', data: 'subtotal'},
+          ]
+      })
+    });
+
+    function showDetail(url) {
+        $('#modal-detail').modal('show');
+
+        table1.ajax.url(url);
+        table1.ajax.reload();
+    }
   </script>
 @endpush

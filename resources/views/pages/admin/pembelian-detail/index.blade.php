@@ -278,7 +278,7 @@
         dom: 'Brt',
         bSort: false,
         ajax: {
-              url: '{{ route('pembelian_detail.data', $id_pembelian) }}',
+          url: '{{ route('pembelian_detail.data', $id_pembelian) }}',
         },
         columns: [
             {class: 'text-center', data: 'DT_RowIndex', searchable: false, sortable: false},
@@ -294,7 +294,6 @@
       .on('draw.dt', function () {
           loadForm($('#diskon').val());
       });
-
       
       //Date range picker
       $('#reservationdate').datetimepicker({

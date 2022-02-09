@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Pembelian;
+use App\PembelianDetail;
 use App\Product;
 use App\Supplier;
 use App\User;
@@ -86,7 +87,25 @@ class PembelianController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $pembelian = Pembelian::findOrFail($request->id_pembelian);
+        $pembelian->users_id = $request->users_id;
+        $pembelian->tgl_pembelian = $request->tgl_pembelian;
+        $pembelian->total_item = $request->total_item;
+        $pembelian->total_harga = $request->total;
+        $pembelian->diskon = $request->diskon;
+        $pembelian->bayar = $request->bayar;
+        $pembelian->status ='Success';
+        $pembelian->update();
+
+        $detail = PembelianDetail::where('id_pembelian', $pembelian->id_pembelian)->get();
+        foreach ($detail as $item) {
+            $product = Product::find($item->id_produk);
+            $product->stok += $item->jumlah;
+            $product->berat = $item->berat;
+            $product->update();
+        }
+
+        return redirect()->route('pembelian.index');
     }
 
     /**
@@ -95,9 +114,45 @@ class PembelianController extends Controller
      * @param  int  $id
      * @return \Illuminate\Http\Response
      */
+
+    public function detail($id)
+    {
+        $detail = PembelianDetail::with('product')->where('id_pembelian', $id)->get();
+
+        return datatables()
+            ->of($detail)
+            ->addIndexColumn()
+            ->addColumn('code', function ($detail) {
+                return '<span class="label label-success">'. $detail->code .'</span>';
+            })
+            ->addColumn('tanggal', function ($detail) {
+                return date($detail->created_at, false);
+            })
+            ->addColumn('name', function ($detail) {
+                return $detail->product->name_product;
+            })
+            ->addColumn('harga_beli', function ($detail) {
+                return 'Rp'. number_format($detail->harga_beli);
+            })
+            ->addColumn('jumlah', function ($detail) {
+                return number_format($detail->jumlah);
+            })
+            ->addColumn('berat', function ($detail) {
+                return number_format($detail->berat).' '. $detail->product->satuan_berat;
+            })
+            ->addColumn('subtotal', function ($detail) {
+                return 'Rp'. number_format($detail->subtotal);
+            })
+            ->rawColumns(['code'])
+            ->make(true);
+    }
+
+
     public function show($id)
     {
-        //
+        $pembelian = Pembelian::find($id);
+
+        return response()->json($pembelian);
     }
 
     /**
