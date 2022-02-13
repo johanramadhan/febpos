@@ -10,6 +10,7 @@ use App\Supplier;
 use App\User;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use PDF;
 
 class PembelianController extends Controller
 {
@@ -186,6 +187,41 @@ class PembelianController extends Controller
      */
     public function destroy($id)
     {
-        //
+        $pembelian = Pembelian::find($id);
+        $detail    = PembelianDetail::where('id_pembelian', $pembelian->id_pembelian)->get();
+        foreach ($detail as $item) {
+            $product = Product::find($item->id_produk);
+            if ($product) {
+                $product->stok -= $item->jumlah;
+                $product->update();
+            }
+            $item->delete();
+        }
+
+        $pembelian->delete();
+
+        return redirect()->route('pembelian.index');
+    }
+
+    public function print($id)
+    {
+        // $setting = Setting::first();
+        $pembelian = Pembelian::find($id);
+            if (! $pembelian) {
+                abort(404);
+            }
+        $detail = PembelianDetail::where('id_pembelian', $id)
+            ->get(); 
+        $customPaper = array(0,0,615,936);
+        $pdf = PDF::loadView('pages.admin.pembelian.nota_besar',[
+            // 'setting' => $setting,
+            'pembelian' => $pembelian,
+            'detail' => $detail,
+            
+        ])->setPaper($customPaper, 'potrait')->setWarnings(false);
+
+        // ->setPaper('f4', 'portrait')
+
+        return $pdf->stream('Pembelian-'. date('Y-m-d-his') .'.pdf');
     }
 }

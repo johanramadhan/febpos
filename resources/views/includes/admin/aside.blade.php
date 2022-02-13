@@ -71,7 +71,7 @@
             </li>
           </ul>
         </li>
-        <li class="nav-item {{ (request()->is('admin/transaction*')) ? 'menu-open' : '' }}">
+        <li class="nav-item {{ (request()->is('admin/data-transaction*')) ? 'menu-open' : '' }}">
           <a href="#" class="nav-link">
             <i class="nav-icon fas fa-cart-plus"></i>
             <p>
@@ -81,7 +81,7 @@
           </a>
           <ul class="nav nav-treeview">
             <li class="nav-item">
-              <a href="{{ route('pembelian.index') }}" class="nav-link {{ (request()->is('admin/transaction/pembelian*')) ? 'active' : '' }}">
+              <a href="{{ route('pembelian.index') }}" class="nav-link {{ (request()->is('admin/data-transaction/pembelian*')) ? 'active' : '' }}">
                 <i class="far fa-circle nav-icon"></i>
                 <p>Transaksi Pembelian</p>
               </a>

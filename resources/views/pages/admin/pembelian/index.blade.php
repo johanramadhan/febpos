@@ -84,9 +84,7 @@
                           <td>Rp{{ number_format($item->bayar) }}</td>
                           <td class="text-center">{{ $item->status }}</td>
                           <td>
-                            <a href="{{ route('pembelian.edit', $item->id_pembelian) }}" class="btn btn-xs btn-info">
-                              <i class="fa fa-pencil-alt"></i>
-                            </a>
+                            <button onclick="print('{{ route('pembelian.print', $item->id_pembelian) }}')" class="btn btn-xs btn-default btn-flat m-1"><i class="fa fa-print"></i></button>
                             <button onclick="showDetail( '{{ route('pembelian.detail', $item->id_pembelian) }}')" class="btn btn-xs btn-info btn-flat m-1"><i class="fa fa-eye"></i></button>
                             <form action="{{ route('pembelian.destroy', $item->id_pembelian) }}" method="POST" class="d-inline">
                               @csrf
@@ -184,5 +182,33 @@
         table1.ajax.url(url);
         table1.ajax.reload();
     }
+
+    function print(url, title) {
+        popupCenter(url, title, 625, 500);
+    }
+
+    function popupCenter(url, title, w, h) {
+        const dualScreenLeft = window.screenLeft !==  undefined ? window.screenLeft : window.screenX;
+        const dualScreenTop  = window.screenTop  !==  undefined ? window.screenTop  : window.screenY;
+
+        const width  = window.innerWidth ? window.innerWidth : document.documentElement.clientWidth ? document.documentElement.clientWidth : screen.width;
+        const height = window.innerHeight ? window.innerHeight : document.documentElement.clientHeight ? document.documentElement.clientHeight : screen.height;
+
+        const systemZoom = width / window.screen.availWidth;
+        const left       = (width - w) / 2 / systemZoom + dualScreenLeft
+        const top        = (height - h) / 2 / systemZoom + dualScreenTop
+        const newWindow  = window.open(url, title, 
+        `
+            scrollbars=yes,
+            width  = ${w / systemZoom}, 
+            height = ${h / systemZoom}, 
+            top    = ${top}, 
+            left   = ${left}
+        `
+        );
+
+        if (window.focus) newWindow.focus();
+    }
+    
   </script>
 @endpush

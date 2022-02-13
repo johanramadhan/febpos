@@ -21,6 +21,21 @@
 
   <!-- Theme style -->
   <link rel="stylesheet" href="{{ asset('dist/css/adminlte.min.css') }}">
+
+  <style>
+    .tampil-bayar {
+        font-size: 4em;
+        text-align: center;
+    }
+
+    .tampil-terbilang {
+        padding: 10px;
+        background: #f0f0f0;
+    }
+    .table-pembelian tbody tr:last-child {
+        display: none;
+    }
+  </style>
 @endpush
 
 @section('content')
